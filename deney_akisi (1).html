@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Çevresel Algı Çalışması</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap');
+
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --border: #E2E0D8;
+    --border-strong: #C8C5BA;
+    --text: #1A1917;
+    --text-muted: #6B6860;
+    --text-faint: #A8A59E;
+    --accent: #2D5BE3;
+    --accent-light: #EEF2FD;
+    --success: #1A7F4B;
+    --success-light: #EBF7F1;
+    --warning: #B45309;
+    --warning-light: #FEF3E2;
+    --danger: #C0392B;
+    --danger-light: #FDEDEC;
+    --purple: #5B4FCF;
+    --purple-light: #EFEDFC;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 620px;
+  }
+
+  /* ── Progress ── */
+  .prog-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .prog-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    background: var(--text);
+    border-radius: 1px;
+    transition: width 0.4s ease;
+  }
+  .prog-text {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* ── Page ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Badge ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 1.25rem;
+  }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .b-pre { background: var(--accent-light); color: var(--accent); }
+  .b-pre .badge-dot { background: var(--accent); }
+  .b-video { background: var(--warning-light); color: var(--warning); }
+  .b-video .badge-dot { background: var(--warning); }
+  .b-post { background: var(--success-light); color: var(--success); }
+  .b-post .badge-dot { background: var(--success); }
+  .b-manip { background: var(--border); color: var(--text-muted); }
+  .b-manip .badge-dot { background: var(--text-muted); }
+  .b-final { background: var(--purple-light); color: var(--purple); }
+  .b-final .badge-dot { background: var(--purple); }
+  .b-wash { background: #F0EDE6; color: var(--text-faint); }
+
+  /* ── Typography ── */
+  .page-title {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1.75rem;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 1rem;
+  }
+
+  /* ── Session form ── */
+  .form-grid {
+    display: grid;
+    gap: 16px;
+    margin-top: 1rem;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .field input,
+  .field select {
+    width: 100%;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: 14px 'DM Sans', sans-serif;
+    padding: 11px 12px;
+  }
+  .condition-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .condition-preview strong { color: var(--text); font-weight: 500; }
+
+  /* ── STAI ── */
+  .stai-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(4, 56px);
+    column-gap: 4px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .stai-header span {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .stai-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(4, 56px);
+    align-items: center;
+    column-gap: 4px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .stai-row:last-child { border-bottom: none; }
+  .stai-q {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.35;
+    padding-right: 10px;
+  }
+  .radio-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 18px;
+  }
+  input[type=radio] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    margin: 0;
+    flex: 0 0 18px;
+  }
+  .score-note {
+    background: var(--accent-light);
+    border: 1px solid rgba(45,91,227,0.18);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: -0.25rem;
+  }
+  .score-note strong { color: var(--text); font-weight: 500; }
+
+  /* ── Nature Relatedness ── */
+  .nr-section {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    margin: 14px 0 4px;
+  }
+  .nr-header,
+  .nr-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(5, 58px);
+    column-gap: 4px;
+    align-items: center;
+  }
+  .nr-header {
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .nr-header span {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nr-header span:not(:first-child) {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    width: 58px;
+    height: 112px;
+  }
+  .nr-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .nr-row:last-child { border-bottom: none; }
+  .nr-q { font-size: 13px; color: var(--text); line-height: 1.4; }
+
+  /* ── VAS / Sliders ── */
+  .vas-big {
+    text-align: center;
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--text);
+    margin: 1rem 0 4px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -2px;
+  }
+  .vas-word {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    min-height: 20px;
+  }
+  .vas-anchors {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--border-strong);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--border-strong);
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 155px 1fr 38px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .item-lbl { font-size: 14px; color: var(--text); }
+  .item-val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+  }
+  .anc-row {
+    display: grid;
+    grid-template-columns: 155px 1fr 38px;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .anc-inner { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-faint); }
+
+  /* ── Section tags ── */
+  .sec-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 0.75rem;
+  }
+  .tag-pos { background: var(--success-light); color: var(--success); }
+  .tag-neg { background: var(--danger-light); color: var(--danger); }
+
+  /* ── Affect Grid ── */
+  .grid-outer {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin: 0.75rem 0 0.25rem;
+  }
+  .grid-y {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: center;
+    user-select: none;
+    line-height: 1.4;
+  }
+  canvas.ag {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: crosshair;
+    display: block;
+    background: var(--surface);
+  }
+  .grid-x {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-faint);
+    padding: 5px 2px 0;
+    width: 288px;
+  }
+  .grid-sel {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0.6rem 0 0.25rem;
+    min-height: 20px;
+  }
+  .grid-sel strong { color: var(--text); font-weight: 500; }
+  .qhints {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin: 0 0 1rem;
+  }
+  .qh {
+    font-size: 11px;
+    color: var(--text-faint);
+    padding: 5px 8px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-align: center;
+    background: var(--bg);
+  }
+  .qh .arr { font-size: 15px; color: var(--text-muted); margin-right: 4px; }
+
+  /* ── Manip sliders ── */
+  .manip-item { margin-bottom: 1.5rem; }
+  .manip-item label { font-size: 14px; color: var(--text); display: block; margin-bottom: 8px; }
+  .manip-row { display: flex; align-items: center; gap: 10px; }
+  .manip-row span { font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+  .manip-val {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── 2-item anxiety ── */
+  .anx2-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0.5rem; }
+  .anx2-item label { font-size: 14px; color: var(--text); display: block; margin-bottom: 8px; }
+  .anx2-row { display: flex; align-items: center; gap: 8px; }
+  .anx2-row span { font-size: 11px; color: var(--text-faint); }
+  .anx2-val { text-align: center; font-size: 14px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── Video placeholder ── */
+  .video-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  .play-ring {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+    background: var(--surface);
+  }
+  .play-ring svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .video-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .video-sub { font-size: 13px; color: var(--text-muted); }
+
+  /* ── Washout ── */
+  .wash-box {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .wash-timer {
+    font-size: 64px;
+    font-weight: 300;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    letter-spacing: -4px;
+    margin-bottom: 0.5rem;
+  }
+  .wash-label { font-size: 14px; color: var(--text-muted); }
+  .wash-bar-wrap { width: 200px; height: 2px; background: var(--border); border-radius: 1px; margin: 1.5rem auto 0; }
+  .wash-bar { height: 100%; background: var(--text); border-radius: 1px; width: 0%; transition: none; }
+
+  /* ── Summary ── */
+  .sum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 1.25rem 0; }
+  .sum-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .sum-lbl { font-size: 10px; color: var(--text-faint); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .sum-val { font-size: 18px; font-weight: 500; color: var(--text); font-family: 'DM Mono', monospace; }
+  .sum-val.long { font-size: 12px; line-height: 1.35; font-family: 'DM Sans', sans-serif; }
+  .sum-sub { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* ── Buttons ── */
+  .btn {
+    width: 100%;
+    padding: 13px 20px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1.25rem;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="prog-wrap">
+    <span class="prog-text" id="prog-lbl">Oturum</span>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <span class="prog-text" id="prog-step">1 / 16</span>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P-1 · Katılımcı ve condition bilgisi -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page active" id="p-session">
+    <span class="badge b-pre"><span class="badge-dot"></span>Oturum</span>
+    <h1 class="page-title">Katılımcı ve condition bilgisi</h1>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field">
+          <label for="participant-id">Katılımcı numarası</label>
+          <input type="text" id="participant-id" inputmode="numeric" placeholder="Örn. 001" oninput="suggestConditionFromParticipant()">
+        </div>
+        <div class="field">
+          <label for="condition-select">Condition</label>
+          <select id="condition-select" onchange="updateConditionPreview()">
+            <option value="1">Condition 1</option>
+            <option value="2">Condition 2</option>
+            <option value="3">Condition 3</option>
+            <option value="4">Condition 4</option>
+          </select>
+        </div>
+        <div class="condition-preview" id="condition-preview"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="go(1)">Deneye başla →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P0 · Affect Grid (Ön) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p0">
+    <span class="badge b-pre"><span class="badge-dot"></span>Ön ölçüm</span>
+    <h1 class="page-title">Şu anki duygu durumunuzu işaretleyiniz.</h1>
+    <p class="page-sub">Yatay eksen olumlu ve olumsuz duygu değerliğini, dikey eksen uyarılma düzeyini gösterir. Çapraz sağ, yukarı doğru gittikçe daha heyecanlı/mutlu, çapraz sağ aşağı gittikçe daha sakin/dingin, çapraz sol yukarı gittikçe daha gergin/stresli, çapraz sol aşağı gittikçe daha üzgün/depresif hissettiğiniz anlaşılmaktadır. Gördüğünüz karelerden duygu durumunuzu en iyi ifade eden tek bir kareye çarpı işareti koymanız beklenmektedir.</p>
+    <div class="qhints">
+      <div class="qh"><span class="arr">↖</span>Gergin / Stresli</div><div class="qh"><span class="arr">↗</span>Heyecanlı / Mutlu</div>
+      <div class="qh"><span class="arr">↙</span>Üzgün / Depresif</div><div class="qh"><span class="arr">↘</span>Sakin / Dingin</div>
+    </div>
+    <div class="grid-outer">
+      <div class="grid-y">Yüksek uyarılma ↑ · ↓ Düşük uyarılma</div>
+      <div>
+        <canvas class="ag" id="ag0" width="288" height="288"></canvas>
+        <div class="grid-x"><span>Olumsuz</span><span>← Değerlik →</span><span>Olumlu</span></div>
+      </div>
+    </div>
+    <div class="grid-sel" id="ag0-sel">Lütfen ızgaraya tıklayınız…</div>
+    <button class="btn" onclick="go(2)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P1 · STAI-6 (Ön) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p1">
+    <span class="badge b-pre"><span class="badge-dot"></span>Ön ölçüm</span>
+    <h1 class="page-title">Şu an nasıl hissediyorsunuz?</h1>
+    <p class="page-sub">Her ifadeyi okuyun ve şu an ne hissettiğinizi en iyi yansıtan seçeneği işaretleyin.</p>
+    <div class="card">
+      <div class="stai-header">
+        <span></span>
+        <span>Hiç</span><span>Biraz</span><span>Orta<br>düzeyde</span><span>Çok<br>fazla</span>
+      </div>
+      <div id="stai-pre-cont"></div>
+    </div>
+    <button class="btn" onclick="go(3)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P2 · Video 1 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p2">
+    <span class="badge b-video"><span class="badge-dot"></span>Video 1</span>
+    <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
+    <p class="page-sub">Video boyunca kulaklığınızın takılı olduğundan emin olun. Doğal bir şekilde izlemeniz yeterlidir.</p>
+    <div class="video-box">
+      <div class="play-ring">
+        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      </div>
+      <div class="video-title">Video 1</div>
+      <div class="video-sub" id="video1-sub">Seçilen condition bilgisi burada görünecektir</div>
+    </div>
+    <button class="btn" onclick="go(4)">Video bitti, devam et →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P3 · Affect Grid (Video 1 sonrası) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p3">
+    <span class="badge b-post"><span class="badge-dot"></span>Video 1 sonrası</span>
+    <h1 class="page-title">Şu an nasıl hissediyorsunuz?</h1>
+    <p class="page-sub">Yatay eksen olumlu ve olumsuz duygu değerliğini, dikey eksen uyarılma düzeyini gösterir. Çapraz sağ, yukarı doğru gittikçe daha heyecanlı/mutlu, çapraz sağ aşağı gittikçe daha sakin/dingin, çapraz sol yukarı gittikçe daha gergin/stresli, çapraz sol aşağı gittikçe daha üzgün/depresif hissettiğiniz anlaşılmaktadır. Gördüğünüz karelerden duygu durumunuzu en iyi ifade eden tek bir kareye çarpı işareti koymanız beklenmektedir.</p>
+    <div class="qhints">
+      <div class="qh"><span class="arr">↖</span>Gergin / Stresli</div><div class="qh"><span class="arr">↗</span>Heyecanlı / Mutlu</div>
+      <div class="qh"><span class="arr">↙</span>Üzgün / Depresif</div><div class="qh"><span class="arr">↘</span>Sakin / Dingin</div>
+    </div>
+    <div class="grid-outer">
+      <div class="grid-y">Yüksek uyarılma ↑ · ↓ Düşük uyarılma</div>
+      <div>
+        <canvas class="ag" id="ag1" width="288" height="288"></canvas>
+        <div class="grid-x"><span>Olumsuz</span><span>← Değerlik →</span><span>Olumlu</span></div>
+      </div>
+    </div>
+    <div class="grid-sel" id="ag1-sel">Lütfen ızgaraya tıklayınız…</div>
+    <button class="btn" onclick="go(5)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P4 · Kaygı VAS + 2-item + PANAS (Video 1) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p4">
+    <span class="badge b-post"><span class="badge-dot"></span>Video 1 sonrası</span>
+    <h1 class="page-title">Kaygı ve duygu durumunuz</h1>
+    <p class="page-sub">Aşağıdaki soruları şu anki hislerinize göre yanıtlayınız.</p>
+
+    <div class="card">
+      <div class="card-label">Kaygı — VAS</div>
+      <div class="vas-big" id="anx1-num">50</div>
+      <div class="vas-word" id="anx1-word">Orta düzeyde</div>
+      <input type="range" id="anx1" min="0" max="100" value="50" step="1" oninput="updAnx('anx1','anx1-num','anx1-word')">
+      <div class="vas-anchors"><span>0 — Hiç</span><span>100 — Son derece</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Şu an nasıl hissediyorsunuz? (2 madde)</div>
+      <div class="anx2-grid">
+        <div class="anx2-item">
+          <label>Gerginim</label>
+          <div class="anx2-row"><span>0</span><input type="range" id="t1a" min="0" max="100" value="50" step="1" oninput="document.getElementById('t1av').textContent=this.value"><span>100</span></div>
+          <div class="anx2-val" id="t1av">50</div>
+        </div>
+        <div class="anx2-item">
+          <label>Rahatım</label>
+          <div class="anx2-row"><span>0</span><input type="range" id="t1b" min="0" max="100" value="50" step="1" oninput="document.getElementById('t1bv').textContent=this.value"><span>100</span></div>
+          <div class="anx2-val" id="t1bv">50</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">I-PANAS-SF</div>
+      <div class="anc-row"><div></div><div class="anc-inner"><span>0 — Hiç</span><span>100 — Son derece</span></div><div></div></div>
+      <div class="sec-tag tag-pos">Pozitif duygular</div>
+      <div id="pa1-cont"></div>
+      <div class="divider"></div>
+      <div class="sec-tag tag-neg">Negatif duygular</div>
+      <div id="na1-cont"></div>
+    </div>
+
+    <button class="btn" onclick="go(6)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P5 · Manipulation Check 1 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p5">
+    <span class="badge b-manip"><span class="badge-dot"></span>Manipulation check</span>
+    <h1 class="page-title">İzlediğiniz video hakkında</h1>
+    <p class="page-sub">Lütfen aşağıdaki soruları az önce izlediğiniz videoyu düşünerek yanıtlayınız.</p>
+    <div class="card" id="mc1-cont"></div>
+    <button class="btn" onclick="go(7)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P6 · Washout -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p6">
+    <span class="badge b-wash"><span class="badge-dot"></span>Ara</span>
+    <div class="wash-box">
+      <div class="wash-timer" id="wash-timer">60</div>
+      <div class="wash-label">Kısa bir mola — lütfen ekranda bekleyiniz</div>
+      <div class="wash-bar-wrap"><div class="wash-bar" id="wash-bar"></div></div>
+    </div>
+    <button class="btn" id="wash-btn" disabled onclick="go(8)">Lütfen bekleyiniz…</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P7 · Video 2 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p7">
+    <span class="badge b-video"><span class="badge-dot"></span>Video 2</span>
+    <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
+    <p class="page-sub">İkinci videoyu da kulaklığınızla izleyiniz.</p>
+    <div class="video-box">
+      <div class="play-ring">
+        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      </div>
+      <div class="video-title">Video 2</div>
+      <div class="video-sub" id="video2-sub">Seçilen condition bilgisi burada görünecektir</div>
+    </div>
+    <button class="btn" onclick="go(9)">Video bitti, devam et →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P8 · Affect Grid (Video 2 sonrası) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p8">
+    <span class="badge b-post"><span class="badge-dot"></span>Video 2 sonrası</span>
+    <h1 class="page-title">Şu an nasıl hissediyorsunuz?</h1>
+    <p class="page-sub">Yatay eksen olumlu ve olumsuz duygu değerliğini, dikey eksen uyarılma düzeyini gösterir. Çapraz sağ, yukarı doğru gittikçe daha heyecanlı/mutlu, çapraz sağ aşağı gittikçe daha sakin/dingin, çapraz sol yukarı gittikçe daha gergin/stresli, çapraz sol aşağı gittikçe daha üzgün/depresif hissettiğiniz anlaşılmaktadır. Gördüğünüz karelerden duygu durumunuzu en iyi ifade eden tek bir kareye çarpı işareti koymanız beklenmektedir.</p>
+    <div class="qhints">
+      <div class="qh"><span class="arr">↖</span>Gergin / Stresli</div><div class="qh"><span class="arr">↗</span>Heyecanlı / Mutlu</div>
+      <div class="qh"><span class="arr">↙</span>Üzgün / Depresif</div><div class="qh"><span class="arr">↘</span>Sakin / Dingin</div>
+    </div>
+    <div class="grid-outer">
+      <div class="grid-y">Yüksek uyarılma ↑ · ↓ Düşük uyarılma</div>
+      <div>
+        <canvas class="ag" id="ag2" width="288" height="288"></canvas>
+        <div class="grid-x"><span>Olumsuz</span><span>← Değerlik →</span><span>Olumlu</span></div>
+      </div>
+    </div>
+    <div class="grid-sel" id="ag2-sel">Lütfen ızgaraya tıklayınız…</div>
+    <button class="btn" onclick="go(10)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P9 · Kaygı VAS + 2-item + PANAS (Video 2) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p9">
+    <span class="badge b-post"><span class="badge-dot"></span>Video 2 sonrası</span>
+    <h1 class="page-title">Kaygı ve duygu durumunuz</h1>
+    <p class="page-sub">Aşağıdaki soruları şu anki hislerinize göre yanıtlayınız.</p>
+
+    <div class="card">
+      <div class="card-label">Kaygı — VAS</div>
+      <div class="vas-big" id="anx2-num">50</div>
+      <div class="vas-word" id="anx2-word">Orta düzeyde</div>
+      <input type="range" id="anx2" min="0" max="100" value="50" step="1" oninput="updAnx('anx2','anx2-num','anx2-word')">
+      <div class="vas-anchors"><span>0 — Hiç</span><span>100 — Son derece</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Şu an nasıl hissediyorsunuz? (2 madde)</div>
+      <div class="anx2-grid">
+        <div class="anx2-item">
+          <label>Gerginim</label>
+          <div class="anx2-row"><span>0</span><input type="range" id="t2a" min="0" max="100" value="50" step="1" oninput="document.getElementById('t2av').textContent=this.value"><span>100</span></div>
+          <div class="anx2-val" id="t2av">50</div>
+        </div>
+        <div class="anx2-item">
+          <label>Rahatım</label>
+          <div class="anx2-row"><span>0</span><input type="range" id="t2b" min="0" max="100" value="50" step="1" oninput="document.getElementById('t2bv').textContent=this.value"><span>100</span></div>
+          <div class="anx2-val" id="t2bv">50</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">I-PANAS-SF</div>
+      <div class="anc-row"><div></div><div class="anc-inner"><span>0 — Hiç</span><span>100 — Son derece</span></div><div></div></div>
+      <div class="sec-tag tag-pos">Pozitif duygular</div>
+      <div id="pa2-cont"></div>
+      <div class="divider"></div>
+      <div class="sec-tag tag-neg">Negatif duygular</div>
+      <div id="na2-cont"></div>
+    </div>
+
+    <button class="btn" onclick="go(11)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P10 · Manipulation Check 2 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p10">
+    <span class="badge b-manip"><span class="badge-dot"></span>Manipulation check</span>
+    <h1 class="page-title">İzlediğiniz video hakkında</h1>
+    <p class="page-sub">Lütfen aşağıdaki soruları az önce izlediğiniz ikinci videoyu düşünerek yanıtlayınız.</p>
+    <div class="card" id="mc2-cont"></div>
+    <button class="btn" onclick="go(12)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P11 · STAI-6 (Son) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p11">
+    <span class="badge b-final"><span class="badge-dot"></span>Son ölçüm</span>
+    <h1 class="page-title">Son olarak nasıl hissediyorsunuz?</h1>
+    <p class="page-sub">Her ifadeyi okuyun ve şu an ne hissettiğinizi en iyi yansıtan seçeneği işaretleyin.</p>
+    <div class="card">
+      <div class="stai-header">
+        <span></span>
+        <span>Hiç</span><span>Biraz</span><span>Orta<br>düzeyde</span><span>Çok<br>fazla</span>
+      </div>
+      <div id="stai-post-cont"></div>
+    </div>
+    <button class="btn" onclick="go(13)">Devam →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P12 · Nature Relatedness -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p12">
+    <span class="badge b-final"><span class="badge-dot"></span>Son ölçüm</span>
+    <h1 class="page-title">Doğayla ilişkiniz</h1>
+    <p class="page-sub">Bu ölçek doğayla olan ilişkinizi duygusal, bilişsel ve davranışsal boyutlarda incelemeyi amaçlamaktadır. Sizin için en uygun olan seçeneği işaretleyiniz.</p>
+    <div class="card">
+      <div class="nr-header">
+        <span></span>
+        <span>Hiç Katılmıyorum</span>
+        <span>Katılmıyorum</span>
+        <span>Kararsızım</span>
+        <span>Katılıyorum</span>
+        <span>Tamamen Katılıyorum</span>
+      </div>
+      <div id="nature-cont"></div>
+    </div>
+    <button class="btn" onclick="go(14)">Tamamla →</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P13 · Teşekkür -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p13">
+    <span class="badge b-final"><span class="badge-dot"></span>Tamamlandı</span>
+    <h1 class="page-title">Deneye katıldığınız için çok teşekkür ederiz, deney görevlisini çağırabilirsiniz.</h1>
+    <p class="page-sub" id="submit-status">Yanıtlarınız kaydediliyor...</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- P14 · Özet -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="p14">
+    <span class="badge b-final"><span class="badge-dot"></span>Tamamlandı</span>
+    <h1 class="page-title">Teşekkürler!</h1>
+    <p class="page-sub">Bu oturuma ait tüm ölçüm skorları aşağıda özetlenmiştir. Lütfen araştırmacıyı çağırınız.</p>
+    <div class="sum-grid">
+      <div class="sum-card"><div class="sum-lbl">Katılımcı</div><div class="sum-val" id="s-participant">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">Condition</div><div class="sum-val" id="s-condition">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">Video sırası</div><div class="sum-val long" id="s-videos">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">AG Ön</div><div class="sum-val" id="s-ag0">—</div><div class="sum-sub" id="s-ag0-sub">P/A</div></div>
+      <div class="sum-card"><div class="sum-lbl">STAI-6 Ön</div><div class="sum-val" id="s-st0">—</div><div class="sum-sub">/80</div></div>
+      <div class="sum-card"><div class="sum-lbl">AG Video 1</div><div class="sum-val" id="s-ag1">—</div><div class="sum-sub" id="s-ag1-sub">P/A</div></div>
+      <div class="sum-card"><div class="sum-lbl">Kaygı VAS 1</div><div class="sum-val" id="s-anx1">—</div><div class="sum-sub">/100</div></div>
+      <div class="sum-card"><div class="sum-lbl">Gergin / Rahat 1</div><div class="sum-val" id="s-2it1">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">PA1 / NA1</div><div class="sum-val" id="s-panas1">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">AG Video 2</div><div class="sum-val" id="s-ag2">—</div><div class="sum-sub" id="s-ag2-sub">P/A</div></div>
+      <div class="sum-card"><div class="sum-lbl">Kaygı VAS 2</div><div class="sum-val" id="s-anx2">—</div><div class="sum-sub">/100</div></div>
+      <div class="sum-card"><div class="sum-lbl">Gergin / Rahat 2</div><div class="sum-val" id="s-2it2">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">PA2 / NA2</div><div class="sum-val" id="s-panas2">—</div></div>
+      <div class="sum-card"><div class="sum-lbl">STAI-6 Son</div><div class="sum-val" id="s-st1">—</div><div class="sum-sub">/80</div></div>
+      <div class="sum-card"><div class="sum-lbl">Nature Relatedness</div><div class="sum-val" id="s-nature">—</div><div class="sum-sub" id="s-nature-sub">/5</div></div>
+      <div class="sum-card"><div class="sum-lbl">MC Uyum 1/2</div><div class="sum-val" id="s-mc">—</div></div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+const TOTAL = 16;
+const GOOGLE_SCRIPT_URL = 'REPLACE_WITH_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+
+function trunc2(value) {
+  return Math.trunc(Number(value) * 100) / 100;
+}
+
+function fmt2(value) {
+  return trunc2(value).toFixed(2);
+}
+
+const conditions = {
+  1: {
+    label: 'Condition 1',
+    video1: {video: 'Nature video', sound: 'Nature sound'},
+    video2: {video: 'Nature video', sound: 'Urban sound'}
+  },
+  2: {
+    label: 'Condition 2',
+    video1: {video: 'Nature video', sound: 'Urban sound'},
+    video2: {video: 'Nature video', sound: 'Nature sound'}
+  },
+  3: {
+    label: 'Condition 3',
+    video1: {video: 'Urban video', sound: 'Urban sound'},
+    video2: {video: 'Urban video', sound: 'Nature sound'}
+  },
+  4: {
+    label: 'Condition 4',
+    video1: {video: 'Urban video', sound: 'Nature sound'},
+    video2: {video: 'Urban video', sound: 'Urban sound'}
+  }
+};
+
+function stimLabel(stim) {
+  return `${stim.video} + ${stim.sound}`;
+}
+
+function selectedCondition() {
+  const value = document.getElementById('condition-select')?.value || '1';
+  return conditions[value] || conditions[1];
+}
+
+function suggestConditionFromParticipant() {
+  const raw = document.getElementById('participant-id').value.trim();
+  const match = raw.match(/\d+/);
+  if(match) {
+    const num = parseInt(match[0], 10);
+    if(num > 0) document.getElementById('condition-select').value = String(((num - 1) % 4) + 1);
+  }
+  updateConditionPreview();
+}
+
+function updateConditionPreview() {
+  const c = selectedCondition();
+  const preview = document.getElementById('condition-preview');
+  if(preview) {
+    preview.innerHTML = `<strong>${c.label}</strong><br>Video 1: ${stimLabel(c.video1)}<br>Video 2: ${stimLabel(c.video2)}`;
+  }
+  const v1 = document.getElementById('video1-sub');
+  const v2 = document.getElementById('video2-sub');
+  if(v1) v1.textContent = stimLabel(c.video1);
+  if(v2) v2.textContent = stimLabel(c.video2);
+}
+
+const staiItems = [
+  {q:"Sakin hissediyorum.", rev:true},
+  {q:"Gergin hissediyorum.", rev:false},
+  {q:"Üzgün hissediyorum.", rev:false},
+  {q:"Rahatlamış hissediyorum.", rev:true},
+  {q:"Memnun hissediyorum.", rev:true},
+  {q:"Endişeliyim.", rev:false}
+];
+
+const paItems = ["Uyanık","İlham almış","Kararlı","Dikkatli","Aktif"];
+const naItems = ["Mutsuz / Sıkıntılı","Düşmanca","Utanmış","Sinirli / Gergin","Korkmuş"];
+
+const natureItems = [
+  {section:'Bilişsel Boyut', q:'Doğanın ayrılmaz bir parçasıyım.'},
+  {section:'Bilişsel Boyut', q:'Doğayla olan ilişkim kim olduğumun önemli bir parçasıdır.'},
+  {section:'Bilişsel Boyut', q:'Çevremdeki doğal dünya (insan eli değmemiş doğal güzellikler) ile bir bütünlük hissediyorum.'},
+  {section:'Bilişsel Boyut', q:'Kendimi doğaya ruhsal olarak bağlı hissediyorum.'},
+  {section:'Bilişsel Boyut', q:'Doğal dünyayı ait olduğum bir topluluk olarak görüyorum.'},
+  {section:'Duygusal Boyut', q:'Sadece doğada olarak bile mutlu hissediyorum.'},
+  {section:'Duygusal Boyut', q:'Doğaya karşı derin bir sevgi hissediyorum.'},
+  {section:'Duygusal Boyut', q:'Doğayla duygusal bir bağım vardır.'},
+  {section:'Duygusal Boyut', q:'Doğada olduğumda mutlu ve evimde hissederim.'},
+  {section:'Duygusal Boyut', q:'Doğa ile iç içe olmak bana huzur ve dinginlik verir.'},
+  {section:'Davranışsal Boyut', q:'Sık sık kırsal alanlara ya da doğaya çıkarım.'},
+  {section:'Davranışsal Boyut', q:'Doğada olduğum zaman onunla bütünleşirim.'},
+  {section:'Davranışsal Boyut', q:'Doğayı kendi parçammış gibi korurum.'},
+  {section:'Davranışsal Boyut', q:'Doğayı sık sık dinler ve izlerim.'},
+  {section:'Davranışsal Boyut', q:'Hayvanlara insanmış gibi davranırım.'}
+];
+
+const mcQuestions = [
+  {id:"mc_uyum", label:"Ses ile görüntü ne kadar uyumluydu?", lo:"Hiç uyumlu değil", hi:"Tamamen uyumlu"},
+  {id:"mc_vdog", label:"Görüntüler ne kadar doğal / doğaya ait görünüyordu?", lo:"Hiç doğal değil", hi:"Tamamen doğal"},
+  {id:"mc_sdog", label:"Sesler ne kadar doğal / doğaya ait geldi?", lo:"Hiç doğal değil", hi:"Tamamen doğal"},
+  {id:"mc_rahatsiz", label:"Ses ne kadar rahatsız edici / can sıkıcıydı?", lo:"Hiç rahatsız edici değil", hi:"Son derece rahatsız edici"}
+];
+
+/* ── Build STAI ── */
+function buildStai(contId, prefix) {
+  const c = document.getElementById(contId);
+  staiItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'stai-row';
+    let html = `<span class="stai-q">${item.q}</span>`;
+    for(let v=1;v<=4;v++) {
+      html += `<div class="radio-wrap"><input type="radio" name="${prefix}_${i}" value="${v}" onchange="updStaiDisplay('${prefix}')"></div>`;
+    }
+    row.innerHTML = html;
+    c.appendChild(row);
+  });
+}
+buildStai('stai-pre-cont','spre');
+buildStai('stai-post-cont','spost');
+
+/* ── Build Nature Relatedness ── */
+function buildNature() {
+  const c = document.getElementById('nature-cont');
+  let currentSection = '';
+  natureItems.forEach((item, i) => {
+    if(item.section !== currentSection) {
+      currentSection = item.section;
+      const section = document.createElement('div');
+      section.className = 'nr-section';
+      section.textContent = currentSection;
+      c.appendChild(section);
+    }
+    const row = document.createElement('div');
+    row.className = 'nr-row';
+    let html = `<span class="nr-q">${i+1}. ${item.q}</span>`;
+    for(let v=1;v<=5;v++) {
+      html += `<div class="radio-wrap"><input type="radio" name="nature_${i}" value="${v}" onchange="updNatureDisplay()"></div>`;
+    }
+    row.innerHTML = html;
+    c.appendChild(row);
+  });
+}
+buildNature();
+
+/* ── Build PANAS sliders ── */
+function buildPanas(items, contId, prefix) {
+  const c = document.getElementById(contId);
+  items.forEach((lbl, i) => {
+    const id = `${prefix}_${i}`;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `<label class="item-lbl">${lbl}</label>
+      <input type="range" id="${id}" min="0" max="100" value="50" step="1" oninput="document.getElementById('${id}v').textContent=this.value; updPanasDisplay('${prefix.slice(-1)}')">
+      <span class="item-val" id="${id}v">50</span>`;
+    c.appendChild(row);
+  });
+}
+buildPanas(paItems,'pa1-cont','pa1');
+buildPanas(naItems,'na1-cont','na1');
+buildPanas(paItems,'pa2-cont','pa2');
+buildPanas(naItems,'na2-cont','na2');
+
+/* ── Build MC ── */
+function buildMC(contId, prefix) {
+  const c = document.getElementById(contId);
+  mcQuestions.forEach((q, i) => {
+    const id = `${prefix}_${i}`;
+    const wrap = document.createElement('div');
+    wrap.className = 'manip-item';
+    wrap.innerHTML = `<label>${i+1}. ${q.label}</label>
+      <div class="manip-row">
+        <span>${q.lo}</span>
+        <input type="range" id="${id}" min="1" max="7" value="4" step="1" oninput="document.getElementById('${id}v').textContent=this.value+' / 7'">
+        <span>${q.hi}</span>
+      </div>
+      <div class="manip-val" id="${id}v">4 / 7</div>`;
+    c.appendChild(wrap);
+  });
+}
+buildMC('mc1-cont','mc1');
+buildMC('mc2-cont','mc2');
+
+/* ── Affect Grid state ── */
+const AG_CELLS = 9;
+const agData = {
+  ag0:{x:null,y:null,v:null,a:null,score:null,cell:null},
+  ag1:{x:null,y:null,v:null,a:null,score:null,cell:null},
+  ag2:{x:null,y:null,v:null,a:null,score:null,cell:null}
+};
+
+function agDistressScore(v, a) {
+  // Russell et al. score P and A separately; this is the 45° distress-contentment rotation, rescaled to 1-9.
+  return trunc2(5 + ((a - v) / 2));
+}
+
+function agCellScore(v, a) {
+  return ((a - 1) * AG_CELLS) + v;
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  const head = 8;
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 6), y2 - head * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 6), y2 - head * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawAG(canvasId, state) {
+  const cv = document.getElementById(canvasId);
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.save();
+  drawArrow(ctx, W/2, H/2, W*0.18, H*0.18, 'rgba(192,57,43,0.20)');
+  drawArrow(ctx, W/2, H/2, W*0.82, H*0.18, 'rgba(26,127,75,0.20)');
+  drawArrow(ctx, W/2, H/2, W*0.18, H*0.82, 'rgba(192,57,43,0.16)');
+  drawArrow(ctx, W/2, H/2, W*0.82, H*0.82, 'rgba(26,127,75,0.16)');
+  ctx.restore();
+
+  for(let i=1;i<AG_CELLS;i++){
+    ctx.beginPath();
+    ctx.strokeStyle='rgba(160,155,148,0.28)';
+    ctx.lineWidth=0.5;
+    ctx.moveTo(i*W/AG_CELLS,0); ctx.lineTo(i*W/AG_CELLS,H);
+    ctx.moveTo(0,i*H/AG_CELLS); ctx.lineTo(W,i*H/AG_CELLS);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.strokeStyle='rgba(160,155,148,0.5)';
+  ctx.lineWidth=1;
+  ctx.moveTo(W/2,0); ctx.lineTo(W/2,H);
+  ctx.moveTo(0,H/2); ctx.lineTo(W,H/2);
+  ctx.stroke();
+  if(state.x !== null){
+    ctx.beginPath();
+    ctx.strokeStyle='#2D5BE3';
+    ctx.lineWidth=3;
+    ctx.lineCap='round';
+    ctx.moveTo(state.x-8, state.y-8);
+    ctx.lineTo(state.x+8, state.y+8);
+    ctx.moveTo(state.x+8, state.y-8);
+    ctx.lineTo(state.x-8, state.y+8);
+    ctx.stroke();
+  }
+}
+
+function setupAG(canvasId, key, selId) {
+  const cv = document.getElementById(canvasId);
+  if(!cv) return;
+  drawAG(canvasId, agData[key]);
+  cv.onclick = function(e) {
+    const r = cv.getBoundingClientRect();
+    const sx = cv.width/r.width, sy = cv.height/r.height;
+    const rawX = (e.clientX - r.left)*sx;
+    const rawY = (e.clientY - r.top)*sy;
+    const col = Math.min(AG_CELLS, Math.max(1, Math.floor((rawX/cv.width)*AG_CELLS)+1));
+    const rowFromTop = Math.min(AG_CELLS, Math.max(1, Math.floor((rawY/cv.height)*AG_CELLS)+1));
+    agData[key].v = col;
+    agData[key].a = (AG_CELLS + 1) - rowFromTop;
+    agData[key].score = agDistressScore(agData[key].v, agData[key].a);
+    agData[key].cell = agCellScore(agData[key].v, agData[key].a);
+    agData[key].x = (col - 0.5) * cv.width / AG_CELLS;
+    agData[key].y = (rowFromTop - 0.5) * cv.height / AG_CELLS;
+    document.getElementById(selId).innerHTML =
+      `Seçilen kare: <strong>${agData[key].cell}/81</strong> &nbsp;·&nbsp; Bileşik skor: <strong>${fmt2(agData[key].score)}/9</strong>`;
+    drawAG(canvasId, agData[key]);
+  };
+}
+
+/* ── VAS word labels ── */
+const anxLabels = [[0,0,'Hiç kaygı yok'],[1,15,'Çok az'],[16,30,'Az'],[31,49,'Biraz'],[50,65,'Orta düzeyde'],[66,80,'Oldukça'],[81,100,'Çok yoğun kaygı']];
+function updAnx(sliderId, numId, wordId) {
+  const v = document.getElementById(sliderId).value;
+  document.getElementById(numId).textContent = v;
+  for(const [lo,hi,lbl] of anxLabels){ if(v>=lo && v<=hi){ document.getElementById(wordId).textContent=lbl; break; } }
+}
+
+/* ── STAI score ── */
+function staiScore(prefix) {
+  let total=0, answered=0;
+  staiItems.forEach((item,i)=>{
+    const sel = document.querySelector(`input[name="${prefix}_${i}"]:checked`);
+    if(sel){ let v=parseInt(sel.value); if(item.rev) v=5-v; total+=v; answered++; }
+  });
+  return answered===6 ? trunc2(total*(20/6)) : null;
+}
+
+function updStaiDisplay(prefix) {
+  const targetId = prefix === 'spre' ? 'stai-pre-score' : 'stai-post-score';
+  const target = document.getElementById(targetId);
+  if(!target) return;
+  const score = staiScore(prefix);
+  target.innerHTML = score === null
+    ? 'Altı madde tamamlandığında STAI-6 puanı görünecektir.'
+    : `STAI-6 puanı: <strong>${fmt2(score)}/80</strong>`;
+}
+
+function staiItemScore(prefix, i) {
+  const sel = document.querySelector(`input[name="${prefix}_${i}"]:checked`);
+  if(!sel) return '';
+  const raw = parseInt(sel.value, 10);
+  return staiItems[i].rev ? 5 - raw : raw;
+}
+
+function natureScores() {
+  const totals = {'Bilişsel Boyut':0, 'Duygusal Boyut':0, 'Davranışsal Boyut':0};
+  let total = 0, answered = 0;
+  natureItems.forEach((item, i) => {
+    const sel = document.querySelector(`input[name="nature_${i}"]:checked`);
+    if(sel) {
+      const v = parseInt(sel.value, 10);
+      totals[item.section] += v;
+      total += v;
+      answered++;
+    }
+  });
+  return answered === natureItems.length
+    ? {total, mean: trunc2(total / natureItems.length), totals}
+    : null;
+}
+
+function updNatureDisplay() {
+  const target = document.getElementById('nature-score');
+  const scores = natureScores();
+  target.innerHTML = scores
+    ? `Doğayla ilişki puanı: <strong>${fmt2(scores.mean)}/5</strong>`
+    : 'On beş madde tamamlandığında doğayla ilişki ortalama puanı görünecektir.';
+}
+
+/* ── PANAS mean ── */
+function pMean(prefix, count) {
+  let s=0; for(let i=0;i<count;i++) s+=parseInt(document.getElementById(`${prefix}_${i}`).value||0);
+  return trunc2(s/count);
+}
+
+function updPanasDisplay(phase) {
+  const target = document.getElementById(`panas${phase}-score`);
+  if(!target) return;
+  target.innerHTML =
+    `Pozitif duygu ortalaması: <strong>${fmt2(pMean(`pa${phase}`,5))}/100</strong> · ` +
+    `Negatif duygu ortalaması: <strong>${fmt2(pMean(`na${phase}`,5))}/100</strong>`;
+}
+
+/* ── MC score ── */
+function mcVal(prefix, i) { return document.getElementById(`${prefix}_${i}`)?.value || '?'; }
+
+function radioRaw(name) {
+  const sel = document.querySelector(`input[name="${name}"]:checked`);
+  return sel ? sel.value : '';
+}
+
+function conditionNumber() {
+  return document.getElementById('condition-select')?.value || '';
+}
+
+function collectResults() {
+  const c = selectedCondition();
+  const data = {
+    submitted_at: new Date().toISOString(),
+    participant_id: document.getElementById('participant-id').value.trim(),
+    condition: conditionNumber(),
+    video1_stimulus: stimLabel(c.video1),
+    video2_stimulus: stimLabel(c.video2),
+
+    affect_grid_pre_pleasure: agData.ag0.v ?? '',
+    affect_grid_pre_arousal: agData.ag0.a ?? '',
+    affect_grid_pre_cell: agData.ag0.cell ?? '',
+    affect_grid_pre_composite: agData.ag0.score !== null ? fmt2(agData.ag0.score) : '',
+    affect_grid_video1_pleasure: agData.ag1.v ?? '',
+    affect_grid_video1_arousal: agData.ag1.a ?? '',
+    affect_grid_video1_cell: agData.ag1.cell ?? '',
+    affect_grid_video1_composite: agData.ag1.score !== null ? fmt2(agData.ag1.score) : '',
+    affect_grid_video2_pleasure: agData.ag2.v ?? '',
+    affect_grid_video2_arousal: agData.ag2.a ?? '',
+    affect_grid_video2_cell: agData.ag2.cell ?? '',
+    affect_grid_video2_composite: agData.ag2.score !== null ? fmt2(agData.ag2.score) : '',
+
+    stai6_pre_total: staiScore('spre') !== null ? fmt2(staiScore('spre')) : '',
+    stai6_post_total: staiScore('spost') !== null ? fmt2(staiScore('spost')) : '',
+
+    anxiety_vas_video1: fmt2(document.getElementById('anx1').value),
+    anxiety_tense_video1: fmt2(document.getElementById('t1a').value),
+    anxiety_relaxed_video1: fmt2(document.getElementById('t1b').value),
+    panas_positive_video1_mean: fmt2(pMean('pa1',5)),
+    panas_negative_video1_mean: fmt2(pMean('na1',5)),
+    anxiety_vas_video2: fmt2(document.getElementById('anx2').value),
+    anxiety_tense_video2: fmt2(document.getElementById('t2a').value),
+    anxiety_relaxed_video2: fmt2(document.getElementById('t2b').value),
+    panas_positive_video2_mean: fmt2(pMean('pa2',5)),
+    panas_negative_video2_mean: fmt2(pMean('na2',5)),
+
+    manipulation_video1_congruence: fmt2(mcVal('mc1',0)),
+    manipulation_video1_visual_nature: fmt2(mcVal('mc1',1)),
+    manipulation_video1_sound_nature: fmt2(mcVal('mc1',2)),
+    manipulation_video1_sound_aversive: fmt2(mcVal('mc1',3)),
+    manipulation_video2_congruence: fmt2(mcVal('mc2',0)),
+    manipulation_video2_visual_nature: fmt2(mcVal('mc2',1)),
+    manipulation_video2_sound_nature: fmt2(mcVal('mc2',2)),
+    manipulation_video2_sound_aversive: fmt2(mcVal('mc2',3))
+  };
+
+  staiItems.forEach((_, i) => {
+    data[`stai6_pre_item${i+1}_raw`] = radioRaw(`spre_${i}`);
+    data[`stai6_pre_item${i+1}_scored`] = staiItemScore('spre', i);
+    data[`stai6_post_item${i+1}_raw`] = radioRaw(`spost_${i}`);
+    data[`stai6_post_item${i+1}_scored`] = staiItemScore('spost', i);
+  });
+  paItems.forEach((_, i) => {
+    data[`panas_video1_positive_item${i+1}`] = fmt2(document.getElementById(`pa1_${i}`).value);
+    data[`panas_video2_positive_item${i+1}`] = fmt2(document.getElementById(`pa2_${i}`).value);
+  });
+  naItems.forEach((_, i) => {
+    data[`panas_video1_negative_item${i+1}`] = fmt2(document.getElementById(`na1_${i}`).value);
+    data[`panas_video2_negative_item${i+1}`] = fmt2(document.getElementById(`na2_${i}`).value);
+  });
+  natureItems.forEach((_, i) => {
+    data[`nature_relatedness_item${i+1}`] = radioRaw(`nature_${i}`);
+  });
+  const nr = natureScores();
+  data.nature_relatedness_mean = nr ? fmt2(nr.mean) : '';
+
+  return data;
+}
+
+function downloadBackup(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const pid = data.participant_id || 'participant';
+  a.href = url;
+  a.download = `${pid}_condition_${data.condition || 'NA'}_backup.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function submitResults() {
+  const status = document.getElementById('submit-status');
+  const data = collectResults();
+  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('REPLACE_WITH')) {
+    status.textContent = 'Kayıt bağlantısı henüz eklenmedi. Lütfen deney görevlisini çağırınız.';
+    downloadBackup(data);
+    return;
+  }
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(data)
+    });
+    status.textContent = 'Yanıtlarınız kaydedildi. Lütfen deney görevlisini çağırınız.';
+  } catch (err) {
+    status.textContent = 'Yanıtlar otomatik gönderilemedi. Yedek dosya indiriliyor; lütfen deney görevlisini çağırınız.';
+    downloadBackup(data);
+  }
+}
+
+/* ── Washout timer ── */
+let washInterval = null;
+function startWash(seconds) {
+  clearInterval(washInterval);
+  const btn = document.getElementById('wash-btn');
+  const timerEl = document.getElementById('wash-timer');
+  const barEl = document.getElementById('wash-bar');
+  btn.disabled = true;
+  btn.textContent = 'Lütfen bekleyiniz…';
+  let remaining = seconds;
+  timerEl.textContent = remaining;
+  barEl.style.transition = 'none';
+  barEl.style.width = '0%';
+  washInterval = setInterval(()=>{
+    remaining--;
+    timerEl.textContent = remaining;
+    barEl.style.transition = 'width 1s linear';
+    barEl.style.width = ((seconds-remaining)/seconds*100)+'%';
+    if(remaining <= 0){
+      clearInterval(washInterval);
+      btn.disabled = false;
+      btn.textContent = 'Devam et →';
+      timerEl.textContent = '0';
+    }
+  }, 1000);
+}
+
+/* ── Page labels ── */
+const phaseNames = [
+  'Oturum','Ön ölçüm','Ön ölçüm','Video 1','Video 1 sonrası','Video 1 sonrası',
+  'Manipulation check','Ara','Video 2','Video 2 sonrası','Video 2 sonrası',
+  'Manipulation check','Son ölçüm','Nature relatedness','Teşekkürler','Tamamlandı'
+];
+
+/* ── Navigation ── */
+function go(n) {
+  updateConditionPreview();
+  document.querySelectorAll('.page').forEach((p,i)=> p.classList.toggle('active', i===n));
+  const pct = Math.round((n/(TOTAL-1))*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-step').textContent = `${n+1} / ${TOTAL}`;
+  document.getElementById('prog-lbl').textContent = phaseNames[n]||'';
+
+  if(n===1) setTimeout(()=>setupAG('ag0','ag0','ag0-sel'),100);
+  if(n===4) setTimeout(()=>setupAG('ag1','ag1','ag1-sel'),100);
+  if(n===7) startWash(60);
+  if(n===9) setTimeout(()=>setupAG('ag2','ag2','ag2-sel'),100);
+  if(n===14) submitResults();
+  if(n===15) fillSummary();
+
+  window.scrollTo(0,0);
+}
+
+/* ── Summary ── */
+function fillSummary() {
+  const c = selectedCondition();
+  const ag = (key) => agData[key].score !== null ? fmt2(agData[key].score) : '—';
+  const agSub = (key) => agData[key].v ? `P/A: ${agData[key].v}/${agData[key].a} · Kare: ${agData[key].cell}/81` : 'P/A';
+  document.getElementById('s-participant').textContent = document.getElementById('participant-id').value.trim() || '—';
+  document.getElementById('s-condition').textContent = c.label.replace('Condition ', 'C');
+  document.getElementById('s-videos').innerHTML = `1: ${stimLabel(c.video1)}<br>2: ${stimLabel(c.video2)}`;
+  document.getElementById('s-ag0').textContent = ag('ag0');
+  document.getElementById('s-ag1').textContent = ag('ag1');
+  document.getElementById('s-ag2').textContent = ag('ag2');
+  document.getElementById('s-ag0-sub').textContent = agSub('ag0');
+  document.getElementById('s-ag1-sub').textContent = agSub('ag1');
+  document.getElementById('s-ag2-sub').textContent = agSub('ag2');
+  const st0 = staiScore('spre'); document.getElementById('s-st0').textContent = st0!==null?fmt2(st0):'—';
+  const st1 = staiScore('spost'); document.getElementById('s-st1').textContent = st1!==null?fmt2(st1):'—';
+  document.getElementById('s-anx1').textContent = fmt2(document.getElementById('anx1').value);
+  document.getElementById('s-anx2').textContent = fmt2(document.getElementById('anx2').value);
+  document.getElementById('s-2it1').textContent = `${fmt2(document.getElementById('t1a').value)}/${fmt2(document.getElementById('t1b').value)}`;
+  document.getElementById('s-2it2').textContent = `${fmt2(document.getElementById('t2a').value)}/${fmt2(document.getElementById('t2b').value)}`;
+  document.getElementById('s-panas1').textContent = `${fmt2(pMean('pa1',5))}/${fmt2(pMean('na1',5))}`;
+  document.getElementById('s-panas2').textContent = `${fmt2(pMean('pa2',5))}/${fmt2(pMean('na2',5))}`;
+  const nr = natureScores();
+  document.getElementById('s-nature').textContent = nr ? fmt2(nr.mean) : '—';
+  document.getElementById('s-nature-sub').textContent = nr
+    ? '15 madde ortalaması'
+    : '/5';
+  document.getElementById('s-mc').textContent = `${fmt2(mcVal('mc1',0))}/${fmt2(mcVal('mc2',0))}`;
+}
+
+/* ── Init session preview ── */
+updateConditionPreview();
+updPanasDisplay('1');
+updPanasDisplay('2');
+</script>
+</body>
+</html>
