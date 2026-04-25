@@ -964,7 +964,10 @@ function updateConditionPreview() {
   const c = selectedCondition();
   const preview = document.getElementById('condition-preview');
   if(preview) {
-    preview.innerHTML = `<strong>${c.label}</strong><br>Video 1: ${stimLabel(c.video1)}<br>Video 2: ${stimLabel(c.video2)}`;
+    preview.innerHTML = Object.values(conditions).map((condition) => {
+      const selected = condition.label === c.label ? ' <span style="color: var(--accent); font-weight: 500;">(seçili)</span>' : '';
+      return `<div style="margin-bottom: 12px;"><strong>${condition.label}</strong>${selected}<br>${stimLabel(condition.video1)} → ${stimLabel(condition.video2)}</div>`;
+    }).join('');
   }
   const v1 = document.getElementById('video1-sub');
   const v2 = document.getElementById('video2-sub');
