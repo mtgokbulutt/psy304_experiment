@@ -436,10 +436,19 @@
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 3rem 2rem;
+    padding: 0;
     text-align: center;
     margin: 1rem 0;
+    overflow: hidden;
   }
+  .video-frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    background: #000;
+  }
+  .video-meta { padding: 14px 16px 16px; }
   .play-ring {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -451,6 +460,13 @@
   .play-ring svg { width: 22px; height: 22px; fill: var(--text-muted); }
   .video-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
   .video-sub { font-size: 13px; color: var(--text-muted); }
+  .video-lock {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    min-height: 20px;
+    margin-top: 0.75rem;
+  }
 
   /* ── Washout ── */
   .wash-box {
@@ -592,13 +608,14 @@
     <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
     <p class="page-sub">Video boyunca kulaklığınızın takılı olduğundan emin olun. Doğal bir şekilde izlemeniz yeterlidir.</p>
     <div class="video-box">
-      <div class="play-ring">
-        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      <iframe class="video-frame" id="video1-frame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      <div class="video-meta">
+        <div class="video-title">Video 1</div>
+        <div class="video-sub" id="video1-sub">Seçilen condition bilgisi burada görünecektir</div>
       </div>
-      <div class="video-title">Video 1</div>
-      <div class="video-sub" id="video1-sub">Seçilen condition bilgisi burada görünecektir</div>
     </div>
-    <button class="btn" onclick="go(4)">Video bitti, devam et →</button>
+    <div class="video-lock" id="video1-lock">Video tamamlandığında devam edebilirsiniz.</div>
+    <button class="btn" id="video1-btn" disabled onclick="go(4)">Video tamamlanıyor...</button>
   </div>
 
   <!-- ══════════════════════════════════════════ -->
@@ -700,13 +717,14 @@
     <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
     <p class="page-sub">İkinci videoyu da kulaklığınızla izleyiniz.</p>
     <div class="video-box">
-      <div class="play-ring">
-        <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+      <iframe class="video-frame" id="video2-frame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      <div class="video-meta">
+        <div class="video-title">Video 2</div>
+        <div class="video-sub" id="video2-sub">Seçilen condition bilgisi burada görünecektir</div>
       </div>
-      <div class="video-title">Video 2</div>
-      <div class="video-sub" id="video2-sub">Seçilen condition bilgisi burada görünecektir</div>
     </div>
-    <button class="btn" onclick="go(9)">Video bitti, devam et →</button>
+    <div class="video-lock" id="video2-lock">Video tamamlandığında devam edebilirsiniz.</div>
+    <button class="btn" id="video2-btn" disabled onclick="go(9)">Video tamamlanıyor...</button>
   </div>
 
   <!-- ══════════════════════════════════════════ -->
@@ -866,6 +884,7 @@
 <script>
 const TOTAL = 16;
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYUssWugERJ5uOefz62zK30rrOLRkK-S4uhLmp8a46_8qhy-avxYJkOgT32JYhzsWmhw/exec';
+const VIDEO_LOCK_SECONDS = 120;
 
 function trunc2(value) {
   return Math.trunc(Number(value) * 100) / 100;
@@ -874,6 +893,17 @@ function trunc2(value) {
 function fmt2(value) {
   return trunc2(value).toFixed(2);
 }
+
+function drivePreviewUrl(fileId) {
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
+const stimulusVideos = {
+  'Nature video + Urban sound': drivePreviewUrl('1XdZJgj-QZewxpaFbvcACqEiGCNJmAbaY'),
+  'Nature video + Nature sound': drivePreviewUrl('1pyfrf_ZF6gmOW5e-kEPsPQ3jiqo9JTcS'),
+  'Urban video + Nature sound': drivePreviewUrl('1TRWQCujqDX3zy0huZcr8b7598BpKJatY'),
+  'Urban video + Urban sound': drivePreviewUrl('1iSpR1gSrrRd__vO5kwbUDt38oMtDDe0q')
+};
 
 const conditions = {
   1: {
@@ -927,6 +957,10 @@ function updateConditionPreview() {
   const v2 = document.getElementById('video2-sub');
   if(v1) v1.textContent = stimLabel(c.video1);
   if(v2) v2.textContent = stimLabel(c.video2);
+  const f1 = document.getElementById('video1-frame');
+  const f2 = document.getElementById('video2-frame');
+  if(f1) f1.src = stimulusVideos[stimLabel(c.video1)] || '';
+  if(f2) f2.src = stimulusVideos[stimLabel(c.video2)] || '';
 }
 
 const staiItems = [
@@ -1139,7 +1173,7 @@ function setupAG(canvasId, key, selId) {
     agData[key].x = (col - 0.5) * cv.width / AG_CELLS;
     agData[key].y = (rowFromTop - 0.5) * cv.height / AG_CELLS;
     document.getElementById(selId).innerHTML =
-      `Seçilen kare: <strong>${agData[key].cell}/81</strong> &nbsp;·&nbsp; Bileşik skor: <strong>${fmt2(agData[key].score)}/9</strong>`;
+      'Seçiminiz kaydedildi.';
     drawAG(canvasId, agData[key]);
   };
 }
@@ -1220,6 +1254,33 @@ function updPanasDisplay(phase) {
 
 /* ── MC score ── */
 function mcVal(prefix, i) { return document.getElementById(`${prefix}_${i}`)?.value || '?'; }
+
+function allRadiosAnswered(prefix, count) {
+  for(let i=0; i<count; i++) {
+    if(!document.querySelector(`input[name="${prefix}_${i}"]:checked`)) return false;
+  }
+  return true;
+}
+
+function requirePageComplete(currentPage) {
+  const participant = document.getElementById('participant-id').value.trim();
+  const checks = {
+    0: [participant.length > 0, 'Lütfen katılımcı numarasını giriniz.'],
+    1: [agData.ag0.v !== null, 'Lütfen Affect Grid üzerinde bir kare seçiniz.'],
+    2: [allRadiosAnswered('spre', staiItems.length), 'Lütfen STAI-6 maddelerinin tümünü yanıtlayınız.'],
+    4: [agData.ag1.v !== null, 'Lütfen Affect Grid üzerinde bir kare seçiniz.'],
+    9: [agData.ag2.v !== null, 'Lütfen Affect Grid üzerinde bir kare seçiniz.'],
+    12: [allRadiosAnswered('spost', staiItems.length), 'Lütfen STAI-6 maddelerinin tümünü yanıtlayınız.'],
+    13: [allRadiosAnswered('nature', natureItems.length), 'Lütfen Doğayla ilişkiniz ölçeğindeki tüm maddeleri yanıtlayınız.']
+  };
+  const check = checks[currentPage];
+  if(!check) return true;
+  if(!check[0]) {
+    alert(check[1]);
+    return false;
+  }
+  return true;
+}
 
 function radioRaw(name) {
   const sel = document.querySelector(`input[name="${name}"]:checked`);
@@ -1334,6 +1395,7 @@ async function submitResults() {
 
 /* ── Washout timer ── */
 let washInterval = null;
+let videoLockInterval = null;
 function startWash(seconds) {
   clearInterval(washInterval);
   const btn = document.getElementById('wash-btn');
@@ -1359,6 +1421,29 @@ function startWash(seconds) {
   }, 1000);
 }
 
+function startVideoLock(videoNo) {
+  clearInterval(videoLockInterval);
+  const btn = document.getElementById(`video${videoNo}-btn`);
+  const lock = document.getElementById(`video${videoNo}-lock`);
+  const frame = document.getElementById(`video${videoNo}-frame`);
+  if(!btn || !lock) return;
+  if(frame) frame.src = frame.src;
+  let remaining = VIDEO_LOCK_SECONDS;
+  btn.disabled = true;
+  btn.textContent = 'Video tamamlanıyor...';
+  lock.textContent = `Devam edebilmek için videoyu izleyiniz. Kalan süre: ${remaining} sn.`;
+  videoLockInterval = setInterval(() => {
+    remaining--;
+    lock.textContent = `Devam edebilmek için videoyu izleyiniz. Kalan süre: ${remaining} sn.`;
+    if(remaining <= 0) {
+      clearInterval(videoLockInterval);
+      btn.disabled = false;
+      btn.textContent = 'Video bitti, devam et →';
+      lock.textContent = 'Devam edebilirsiniz.';
+    }
+  }, 1000);
+}
+
 /* ── Page labels ── */
 const phaseNames = [
   'Oturum','Ön ölçüm','Ön ölçüm','Video 1','Video 1 sonrası','Video 1 sonrası',
@@ -1368,6 +1453,8 @@ const phaseNames = [
 
 /* ── Navigation ── */
 function go(n) {
+  const current = [...document.querySelectorAll('.page')].findIndex((p) => p.classList.contains('active'));
+  if(n > current && !requirePageComplete(current)) return;
   updateConditionPreview();
   document.querySelectorAll('.page').forEach((p,i)=> p.classList.toggle('active', i===n));
   const pct = Math.round((n/(TOTAL-1))*100);
@@ -1376,8 +1463,10 @@ function go(n) {
   document.getElementById('prog-lbl').textContent = phaseNames[n]||'';
 
   if(n===1) setTimeout(()=>setupAG('ag0','ag0','ag0-sel'),100);
+  if(n===3) startVideoLock(1);
   if(n===4) setTimeout(()=>setupAG('ag1','ag1','ag1-sel'),100);
   if(n===7) startWash(60);
+  if(n===8) startVideoLock(2);
   if(n===9) setTimeout(()=>setupAG('ag2','ag2','ag2-sel'),100);
   if(n===14) submitResults();
   if(n===15) fillSummary();
