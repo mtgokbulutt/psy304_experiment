@@ -454,6 +454,7 @@
   .video-meta { padding: 14px 16px 16px; }
   .video-actions { padding: 0 16px 16px; }
   .video-actions .btn { margin-top: 0; }
+  .video-next-btn { display: none; }
   .play-ring {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -464,7 +465,7 @@
   }
   .play-ring svg { width: 22px; height: 22px; fill: var(--text-muted); }
   .video-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
-  .video-sub { font-size: 13px; color: var(--text-muted); }
+  .video-sub { display: none; }
   .video-lock {
     font-size: 13px;
     color: var(--text-muted);
@@ -613,17 +614,17 @@
     <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
     <p class="page-sub">Video boyunca kulaklığınızın takılı olduğundan emin olun. Doğal bir şekilde izlemeniz yeterlidir.</p>
     <div class="video-box">
-      <video class="video-frame" id="video1-frame" preload="metadata" playsinline></video>
+      <video class="video-frame" id="video1-frame" preload="auto" disablepictureinpicture controlsList="nodownload noplaybackrate nofullscreen"></video>
       <div class="video-meta">
         <div class="video-title">Video 1</div>
-        <div class="video-sub" id="video1-sub">Seçilen condition bilgisi burada görünecektir</div>
+        <div class="video-sub" id="video1-sub"></div>
       </div>
       <div class="video-actions">
         <button class="btn" id="video1-start" onclick="startVideoPlayback(1)">Videoyu tam ekranda başlat</button>
       </div>
     </div>
-    <div class="video-lock" id="video1-lock">Video tamamlandığında devam edebilirsiniz.</div>
-    <button class="btn" id="video1-btn" disabled onclick="go(4)">Video tamamlanıyor...</button>
+    <div class="video-lock" id="video1-lock">Videoyu başlatmak için yukarıdaki butona basınız.</div>
+    <button class="btn video-next-btn" id="video1-btn" disabled onclick="go(4)">Video tamamlanıyor...</button>
   </div>
 
   <!-- ══════════════════════════════════════════ -->
@@ -725,17 +726,17 @@
     <h1 class="page-title">Lütfen videoyu izleyiniz.</h1>
     <p class="page-sub">İkinci videoyu da kulaklığınızla izleyiniz.</p>
     <div class="video-box">
-      <video class="video-frame" id="video2-frame" preload="metadata" playsinline></video>
+      <video class="video-frame" id="video2-frame" preload="auto" disablepictureinpicture controlsList="nodownload noplaybackrate nofullscreen"></video>
       <div class="video-meta">
         <div class="video-title">Video 2</div>
-        <div class="video-sub" id="video2-sub">Seçilen condition bilgisi burada görünecektir</div>
+        <div class="video-sub" id="video2-sub"></div>
       </div>
       <div class="video-actions">
         <button class="btn" id="video2-start" onclick="startVideoPlayback(2)">Videoyu tam ekranda başlat</button>
       </div>
     </div>
-    <div class="video-lock" id="video2-lock">Video tamamlandığında devam edebilirsiniz.</div>
-    <button class="btn" id="video2-btn" disabled onclick="go(9)">Video tamamlanıyor...</button>
+    <div class="video-lock" id="video2-lock">Videoyu başlatmak için yukarıdaki butona basınız.</div>
+    <button class="btn video-next-btn" id="video2-btn" disabled onclick="go(9)">Video tamamlanıyor...</button>
   </div>
 
   <!-- ══════════════════════════════════════════ -->
@@ -906,15 +907,15 @@ function fmt2(value) {
 }
 
 const stimulusVideos = {
-  'Nature video + Urban sound': 'VIDEOLAR_304_COMPRESSED/nature_view_traffic_sound.mp4',
-  'Nature video + Nature sound': 'VIDEOLAR_304_COMPRESSED/nature.mp4',
-  'Urban video + Nature sound': 'VIDEOLAR_304_COMPRESSED/traffic_view_nature_sound.mp4',
-  'Urban video + Urban sound': 'VIDEOLAR_304_COMPRESSED/traffic.mp4'
+  'Nature video + Urban sound': 'VIDEOLAR_304_25MB/nature_view_traffic_sound.mp4',
+  'Nature video + Nature sound': 'VIDEOLAR_304_25MB/nature.mp4',
+  'Urban video + Nature sound': 'VIDEOLAR_304_25MB/traffic_view_nature_sound.mp4',
+  'Urban video + Urban sound': 'VIDEOLAR_304_25MB/traffic.mp4'
 };
 
 const videoState = {
-  1: {started:false, elapsed:false, ended:false, maxTime:0, interval:null},
-  2: {started:false, elapsed:false, ended:false, maxTime:0, interval:null}
+  1: {started:false, elapsed:false, ended:false, autoAdvanced:false, maxTime:0, lastTime:0, interval:null},
+  2: {started:false, elapsed:false, ended:false, autoAdvanced:false, maxTime:0, lastTime:0, interval:null}
 };
 
 const conditions = {
@@ -963,12 +964,12 @@ function updateConditionPreview() {
   const c = selectedCondition();
   const preview = document.getElementById('condition-preview');
   if(preview) {
-    preview.innerHTML = `<strong>${c.label}</strong><br>Video 1: ${stimLabel(c.video1)}<br>Video 2: ${stimLabel(c.video2)}`;
+    preview.innerHTML = `<strong>${c.label}</strong><br>Video 1<br>Video 2`;
   }
   const v1 = document.getElementById('video1-sub');
   const v2 = document.getElementById('video2-sub');
-  if(v1) v1.textContent = stimLabel(c.video1);
-  if(v2) v2.textContent = stimLabel(c.video2);
+  if(v1) v1.textContent = '';
+  if(v2) v2.textContent = '';
   const f1 = document.getElementById('video1-frame');
   const f2 = document.getElementById('video2-frame');
   if(f1 && f1.dataset.src !== stimulusVideos[stimLabel(c.video1)]) {
@@ -1448,11 +1449,12 @@ function startVideoLock(videoNo) {
   const frame = document.getElementById(`video${videoNo}-frame`);
   const startBtn = document.getElementById(`video${videoNo}-start`);
   if(!btn || !lock) return;
-  Object.assign(state, {started:false, elapsed:false, ended:false, maxTime:0, interval:null});
+  Object.assign(state, {started:false, elapsed:false, ended:false, autoAdvanced:false, maxTime:0, lastTime:0, interval:null});
   if(frame) {
     frame.pause();
     frame.currentTime = 0;
     frame.controls = false;
+    frame.oncontextmenu = (event) => event.preventDefault();
     frame.load();
   }
   if(startBtn) {
@@ -1475,15 +1477,30 @@ async function startVideoPlayback(videoNo) {
   state.started = true;
   state.elapsed = false;
   state.ended = false;
+  state.autoAdvanced = false;
   state.maxTime = 0;
+  state.lastTime = 0;
   video.controls = false;
+  video.playbackRate = 1;
+  video.oncontextmenu = (event) => event.preventDefault();
   video.currentTime = 0;
 
   video.onseeking = () => {
-    if(video.currentTime > state.maxTime + 0.35) video.currentTime = state.maxTime;
+    if(Math.abs(video.currentTime - state.lastTime) > 0.75) {
+      video.currentTime = state.lastTime;
+    }
   };
   video.ontimeupdate = () => {
-    if(!video.seeking && video.currentTime > state.maxTime) state.maxTime = video.currentTime;
+    if(!video.seeking) {
+      state.lastTime = video.currentTime;
+      if(video.currentTime > state.maxTime) state.maxTime = video.currentTime;
+    }
+  };
+  video.onratechange = () => {
+    if(video.playbackRate !== 1) video.playbackRate = 1;
+  };
+  video.onpause = () => {
+    if(state.started && !state.ended && !video.ended) video.play().catch(() => {});
   };
   video.onended = () => {
     state.ended = true;
@@ -1491,10 +1508,11 @@ async function startVideoPlayback(videoNo) {
   };
 
   try {
+    const fullscreenPromise = enterVideoFullscreen(video);
     await video.play();
-    if(video.requestFullscreen) video.requestFullscreen().catch(() => {});
-    else if(video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+    await fullscreenPromise;
   } catch (err) {
+    state.started = false;
     if(startBtn) startBtn.disabled = false;
     lock.textContent = 'Video başlatılamadı. Lütfen tekrar deneyiniz.';
     return;
@@ -1515,6 +1533,44 @@ async function startVideoPlayback(videoNo) {
   }, 1000);
 }
 
+function enterVideoFullscreen(video) {
+  try {
+    if(video.requestFullscreen) return video.requestFullscreen().catch(() => {});
+    if(video.webkitRequestFullscreen) {
+      video.webkitRequestFullscreen();
+      return Promise.resolve();
+    }
+    if(video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
+      return Promise.resolve();
+    }
+  } catch (err) {
+    return Promise.resolve();
+  }
+  return Promise.resolve();
+}
+
+function exitVideoFullscreen() {
+  try {
+    if(document.fullscreenElement && document.exitFullscreen) {
+      return document.exitFullscreen().catch(() => {});
+    }
+    if(document.webkitFullscreenElement && document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  } catch (err) {}
+  return Promise.resolve();
+}
+
+const blockedVideoKeys = new Set(['ArrowLeft','ArrowRight','Home','End','PageUp','PageDown',' ','k','j','l','K','J','L']);
+document.addEventListener('keydown', (event) => {
+  const videoIsActive = Object.values(videoState).some((state) => state.started && !state.ended);
+  if(videoIsActive && blockedVideoKeys.has(event.key)) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}, true);
+
 function updateVideoCompletion(videoNo) {
   const state = videoState[videoNo];
   const btn = document.getElementById(`video${videoNo}-btn`);
@@ -1523,7 +1579,15 @@ function updateVideoCompletion(videoNo) {
   if(state.elapsed && state.ended) {
     btn.disabled = false;
     btn.textContent = 'Video bitti, devam et →';
-    lock.textContent = 'Video tamamlandı. Devam edebilirsiniz.';
+    lock.textContent = 'Video tamamlandı. Sıradaki sayfaya geçiliyor...';
+    if(!state.autoAdvanced) {
+      state.autoAdvanced = true;
+      clearInterval(state.interval);
+      setTimeout(async () => {
+        await exitVideoFullscreen();
+        go(videoNo === 1 ? 4 : 9);
+      }, 700);
+    }
   } else if(state.elapsed && !state.ended) {
     lock.textContent = 'Lütfen video tamamen bitene kadar bekleyiniz.';
   } else if(!state.elapsed && state.ended) {
